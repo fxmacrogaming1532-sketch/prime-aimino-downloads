@@ -9,9 +9,29 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Obter repositório de distribuição
+        uses: actions/checkout@v4
+      - name: Obter fonte do agente
+        uses: actions/checkout@v4
+        with:
+          repository: fxmacrogaming1532-sketch/prime-aimino-local-agent
+          path: prime-aimino-local-agent
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependências
+        shell: pwsh
+        run: |
+          python -m pip install -r prime-aimino-local-agent/requirements.txt -r prime-aimino-local-agent/agente_web/requirements_agent.txt
+          choco install innosetup --no-progress --yes
+      - name: Gerar instalador a partir do agente versionado
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v','V')
+          ./prime-aimino-local-agent/agente_web/criar_pacote_cliente.ps1 -OutputDirectory . -ProductVersion $version
       - uses: softprops/action-gh-release@v2
         with:
           name: PRIME AIMINO ${{ github.ref_name }}
